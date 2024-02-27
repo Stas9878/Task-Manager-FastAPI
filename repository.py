@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from database import new_session, TaskOrm
-from main import STaskAdd
+from schemas import STaskAdd, STask
 
 class TaskRepository:
     @classmethod
@@ -10,14 +10,15 @@ class TaskRepository:
             task = TaskOrm(**task_dict)
 
             session.add(task)
-            session.flush()
+            await session.flush()
             await session.commit()
-            return task.id
+            return int(task.id)
 
     @classmethod
-    async def find_all(cls):
+    async def find_all(cls) -> list[STask]:
         async with new_session() as session:
             query = select(TaskOrm)
             result = await session.execute(query)
             task_models = result.scalars().all()
-            return task_models
+            task_schemas = [task for task in task_models]
+            return task_schemas
